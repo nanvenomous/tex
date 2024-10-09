@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"go/ast"
 	"go/parser"
+	"go/printer"
 	"go/token"
+	"os"
 )
 
 func main() {
@@ -16,13 +18,16 @@ func main() {
 		return
 	}
 
-	for name, pkg := range node {
+	for _, pkg := range node {
 		ast.Inspect(pkg, func(n ast.Node) bool {
 			fn, ok := n.(*ast.FuncDecl)
 			if !ok {
 				return true // continue traversal
 			}
-			fmt.Printf("Package: %s, Function Name: %s\n", name, fn.Name)
+			// fmt.Printf("Package: %s, Function Name: %s\n", name, fn.Name)
+			fmt.Println()
+			printer.Fprint(os.Stdout, fset, fn)
+			fmt.Println()
 			return false // don't continue traversal of this AST node
 		})
 	}
