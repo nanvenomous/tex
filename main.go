@@ -1,51 +1,41 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/printer"
-	"go/token"
-	"os"
+	"net/http"
+	"net/url"
+
+	"github.com/ollama/ollama/api"
 )
 
-func run(pth string) error {
-	fset := token.NewFileSet()
-
-	node, err := parser.ParseDir(fset, pth, nil, 0)
+// ChatWithOllama sends a single chat message and returns the response.
+func ChatWithOllama(ctx context.Context, model, prompt string) error {
+	httpClnt := http.Client{}
+	ollamaURL, err := url.Parse("https://ollama.fiore.one")
 	if err != nil {
 		return err
 	}
 
-	for _, pkg := range node {
-		ast.Inspect(pkg, func(n ast.Node) bool {
-			fn, ok := n.(*ast.FuncDecl)
-			if !ok {
-				return true // continue traversal
-			}
+	ollamaClient := api.NewClient(ollamaURL, &httpClnt)
 
-			ast.Inspect(fn, func(n ast.Node) bool {
-				cl, ok := n.(*ast.CallExpr)
-				if ok {
-					fmt.Println()
-					printer.Fprint(os.Stdout, fset, cl)
-					fmt.Println()
-				}
-				return true
-			})
-
-			// fmt.Printf("Package: %s, Function Name: %s\n", name, fn.Name)
-			fmt.Println()
-			printer.Fprint(os.Stdout, fset, fn)
-			fmt.Println()
-			return false // don't continue traversal of this AST node
-		})
-	}
-	return nil
+	err = ollamaClient.Chat(ctx, &api.ChatRequest{
+		Model: model,
+		Messages: []api.Message{
+			{
+				Role:    "user",
+				Content: prompt,
+			},
+		},
+	}, func(chtRes api.ChatResponse) error {
+		fmt.Println(chtRes.Message.Content)
+		return nil
+	})
+	return err
 }
 
 func main() {
-	err := run(".")
+	err := ChatWithOllama(context.TODO(), "llama3.2", "hello")
 	if err != nil {
 		panic(err)
 	}
