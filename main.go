@@ -9,10 +9,15 @@ import (
 	"github.com/ollama/ollama/api"
 )
 
+var (
+	// baseURL = "https://ollama.fiore.one"
+	baseURL = "http://127.0.0.1:11434"
+)
+
 // ChatWithOllama sends a single chat message and returns the response.
 func ChatWithOllama(ctx context.Context, model, prompt string) error {
 	httpClnt := http.Client{}
-	ollamaURL, err := url.Parse("https://ollama.fiore.one")
+	ollamaURL, err := url.Parse(baseURL)
 	if err != nil {
 		return err
 	}
