@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/ollama/ollama/api"
 	"github.com/spf13/cobra"
@@ -16,18 +17,21 @@ import (
 
 var (
 	// baseURL = "https://ollama.fiore.one"
-	baseURL = "http://127.0.0.1:11434"
+	ollamaClient *api.Client
+	baseURL      = "http://127.0.0.1:11434"
+	model        = "llama3.2"
+	flagFiles    []string
 )
 
 // ChatWithOllama sends a single chat message and returns the response.
 func ChatWithOllama(ctx context.Context, model, prompt string) error {
-	httpClnt := http.Client{}
-	ollamaURL, err := url.Parse(baseURL)
+	// tmpFl, err := os.CreateTemp("", "tex_*.md")
+	tmpFl, err := os.Create("/tmp/tex_response.md")
 	if err != nil {
 		return err
 	}
-
-	ollamaClient := api.NewClient(ollamaURL, &httpClnt)
+	defer tmpFl.Close()
+	fmt.Println(tmpFl.Name())
 
 	err = ollamaClient.Chat(ctx, &api.ChatRequest{
 		Model: model,
@@ -38,18 +42,38 @@ func ChatWithOllama(ctx context.Context, model, prompt string) error {
 			},
 		},
 	}, func(chtRes api.ChatResponse) error {
-		fmt.Println(chtRes.Message.Content)
-		return nil
+		// fmt.Println(chtRes.Message.Content)
+		_, err := tmpFl.Write([]byte(chtRes.Message.Content))
+		return err
 	})
 	return err
 }
 
-// rootCmd represents the base command when called without any subcommands
+// rootCmd calls the tex ai agent
 var rootCmd = &cobra.Command{
 	Use:   "tex",
 	Short: "A brief description of your application",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return ChatWithOllama(context.TODO(), "llama3.2", "hello")
+		var prompt string
+
+		if len(flagFiles) > 0 {
+			for _, fl := range flagFiles {
+				flByt, err := os.ReadFile(fl)
+				if err != nil {
+					fmt.Printf("Failed to parse file %s: %v \n", fl, err)
+					continue
+				}
+				prompt += string(flByt) + "\n"
+			}
+		}
+
+		if len(args) == 1 {
+			prompt = prompt + "\n" + args[0]
+		} else if len(args) > 1 {
+			prompt = prompt + "\n" + strings.Join(args, " ")
+		}
+
+		return ChatWithOllama(cmd.Context(), model, prompt)
 	},
 }
 
@@ -64,5 +88,10 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().StringSliceVarP(&flagFiles, "file", "f", []string{}, "add a slice of files to the context")
+
+	httpClnt := http.Client{}
+	ollamaURL, err := url.Parse(baseURL)
+	cobra.CheckErr(err)
+	ollamaClient = api.NewClient(ollamaURL, &httpClnt)
 }
