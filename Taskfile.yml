@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  default:
+    desc: 'build the tex binary'
+    cmds:
+      - go build -o tex ./main.go
