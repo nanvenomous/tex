@@ -1,10 +1,9 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
 */
 package main
 
-import "tex/cmd"
+import "github.com/nanvenomous/tex/cmd"
 
 func main() {
 	cmd.Execute()

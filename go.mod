@@ -1,4 +1,4 @@
-module tex
+module github.com/nanvenomous/tex
 
 go 1.24.1
 
