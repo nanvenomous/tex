@@ -16,7 +16,7 @@ func editor(flPth string) error {
 type tmpFileFunc func(tmpFl *os.File) error
 
 func withTempFile(pattern string, tff tmpFileFunc) error {
-	tmpFl, err := os.CreateTemp("", pattern)
+	tmpFl, err := os.CreateTemp(tmpDir, pattern)
 	if err != nil {
 		return err
 	}

@@ -5,27 +5,29 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/ollama/ollama/api"
 	"github.com/spf13/cobra"
 )
 
+// type config struct {
+// 	TemporaryDirectory string `yaml:""`
+// 	Model              string `yaml:""`
+// 	BaseURL            string `yaml:""`
+// }
+
 const (
-	tmpDir  = ""
-	baseURL = "http://127.0.0.1:11434"
-	// model      = "deepseek-r1:32b"
-	// model      = "llama3.2"
-	model = "deepseek-coder-v2:16b"
+	tmpDir = ""
+	model  = "llama3.2"
+	// model = "deepseek-coder-v2:16b"
+	// model   = "deepseek-r1:32b"
+	baseURL = "https://ollama.fiore.one"
+	// baseURL = "http://127.0.0.1:11434"
 )
 
 var (
-	ollamaClient *api.Client
-	// baseURL = "https://ollama.fiore.one"
 	flagFiles    []string
 	editorEnvVar = os.Getenv("EDITOR")
 	requestFile  = "request_*.md"
@@ -100,12 +102,5 @@ func Execute() {
 }
 
 func init() {
-	// os.Mkdir(texDir, os.ModePerm)
-
 	rootCmd.Flags().StringSliceVarP(&flagFiles, "file", "f", []string{}, "add a slice of files to the context")
-
-	httpClnt := http.Client{}
-	ollamaURL, err := url.Parse(baseURL)
-	cobra.CheckErr(err)
-	ollamaClient = api.NewClient(ollamaURL, &httpClnt)
 }
