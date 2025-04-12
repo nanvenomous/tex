@@ -125,4 +125,4 @@ func init() {
 
 ```
 
-how could I set the default completion of the root command to no completion at all?
+how could I set the default completion of the root command to not complete anything at all? right now it's doing file completions.

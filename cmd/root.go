@@ -68,6 +68,9 @@ func editRequestFile(prompt string) (string, error) {
 var rootCmd = &cobra.Command{
 	Use:   "tex",
 	Short: "A brief description of your application",
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]cobra.Completion, cobra.ShellCompDirective) {
+		return []cobra.Completion{}, cobra.ShellCompDirectiveNoFileComp
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var prompt string
 
