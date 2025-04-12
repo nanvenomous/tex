@@ -125,4 +125,4 @@ func init() {
 
 ```
 
-how would you improve this code?
+how could I set the default completion of the root command to no completion at all?

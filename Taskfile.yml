@@ -10,3 +10,8 @@ tasks:
     deps: [default]
     cmds:
       - "sudo mv tex /usr/local/bin/"
+  completion-zsh:
+    desc: 'build the tex binary, and install on the system'
+    deps: [default]
+    cmds:
+      - './.scripts/completion-zsh.zsh'
