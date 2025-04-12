@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -17,7 +16,7 @@ import (
 )
 
 const (
-	texDir  = "context"
+	tmpDir  = ""
 	baseURL = "http://127.0.0.1:11434"
 	// model      = "deepseek-r1:32b"
 	// model      = "llama3.2"
@@ -29,40 +28,9 @@ var (
 	// baseURL = "https://ollama.fiore.one"
 	flagFiles    []string
 	editorEnvVar = os.Getenv("EDITOR")
-	requestFile  = filepath.Join(texDir, "request.md")
-	responseFile = filepath.Join(texDir, "response.md")
+	requestFile  = "request_*.md"
+	responseFile = "response_*.md"
 )
-
-func editor(flPth string) error {
-	cmd := exec.Command(editorEnvVar, flPth)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
-}
-
-func editRequestFile(prompt string) (string, error) {
-	reqFl, err := os.Create(requestFile)
-	if err != nil {
-		return prompt, err
-	}
-	defer reqFl.Close()
-	_, err = reqFl.Write([]byte(prompt))
-	if err != nil {
-		return prompt, err
-	}
-	err = editor(requestFile)
-	if err != nil {
-		return prompt, err
-	}
-
-	reqFlByt, err := os.ReadFile(requestFile)
-	if err != nil {
-		return prompt, err
-	}
-
-	return string(reqFlByt), nil
-}
 
 // rootCmd calls the tex ai agent
 var rootCmd = &cobra.Command{
@@ -94,13 +62,30 @@ var rootCmd = &cobra.Command{
 			prompt = prompt + "\n" + strings.Join(args, " ")
 		} else {
 			var err error
-			prompt, err = editRequestFile(prompt)
-			if err != nil {
-				return err
-			}
+			err = withTempFile(requestFile, func(tmpFl *os.File) error {
+				_, err = tmpFl.Write([]byte(prompt))
+				if err != nil {
+					return err
+				}
+				err = editor(tmpFl.Name())
+				if err != nil {
+					return err
+				}
+
+				reqFlByt, err := os.ReadFile(tmpFl.Name())
+				if err != nil {
+					return err
+				}
+				prompt = string(reqFlByt)
+				return nil
+			})
 		}
 
-		return chatWithOllama(cmd.Context(), model, prompt)
+		return withTempFile(responseFile, func(tmpFl *os.File) error {
+			go chatWithOllama(cmd.Context(), model, prompt, tmpFl)
+
+			return editor(tmpFl.Name())
+		})
 	},
 }
 
@@ -115,7 +100,7 @@ func Execute() {
 }
 
 func init() {
-	os.Mkdir(texDir, os.ModePerm)
+	// os.Mkdir(texDir, os.ModePerm)
 
 	rootCmd.Flags().StringSliceVarP(&flagFiles, "file", "f", []string{}, "add a slice of files to the context")
 
