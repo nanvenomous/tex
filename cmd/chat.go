@@ -7,22 +7,24 @@ import (
 	"os"
 
 	"github.com/ollama/ollama/api"
-	"github.com/spf13/cobra"
 )
 
 var (
 	ollamaClient *api.Client
 )
 
-// authRoundTripper wraps an http.RoundTripper and adds an Authorization header to each request.
-type authRoundTripper struct {
+// roundTripper wraps an http.RoundTripper and adds common headers to each request.
+type roundTripper struct {
 	rt http.RoundTripper
 }
 
-// RoundTrip implements the RoundTripper interface. It clones the request, adds the Authorization header, then forwards it.
-func (a *authRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+// RoundTrip implements the RoundTripper interface. It clones the request, adds the common headers, then forwards it.
+func (a *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	req = req.Clone(req.Context())
-	req.Header.Set("Authorization", os.Getenv("LIBERO_API_KEY"))
+
+	for hdr, val := range config.Headers {
+		req.Header.Set(hdr, val)
+	}
 
 	return a.rt.RoundTrip(req)
 }
@@ -44,10 +46,14 @@ func chatWithOllama(ctx context.Context, model, prompt string, chatResFile *os.F
 	return err
 }
 
-func init() {
-	rt := &authRoundTripper{rt: http.DefaultTransport}
+// setupChat does the setup for the ollama chat file
+func setupChat() error {
+	rt := &roundTripper{rt: http.DefaultTransport}
 	httpClnt := http.Client{Transport: rt}
-	ollamaURL, err := url.Parse(baseURL)
-	cobra.CheckErr(err)
+	ollamaURL, err := url.Parse(config.BaseURL)
+	if err != nil {
+		return err
+	}
 	ollamaClient = api.NewClient(ollamaURL, &httpClnt)
+	return nil
 }
