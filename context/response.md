@@ -1,9 +1,23 @@
-/*
-Copyright © 2025 nanvenomous mrgarelli@gmail.com
-*/
+ Here are a few improvements that can be made to the provided Go code:
+
+1. **Error Handling**: Improve error handling and logging for better debugging.
+2. **Environment Variable Check**: Ensure `editorEnvVar` is set before using it.
+3. **Command-Line Argument Handling**: Handle command-line arguments more gracefully, especially when no prompt is provided.
+4. **Code Readability**: Refactor code to improve readability and maintainability.
+5. **Dependency Injection**: Inject dependencies where possible for better testability and modularity.
+6. **Constants vs Variables**: Use constants judiciously and avoid unnecessary global variables.
+7. **Context Usage**: Ensure context is used appropriately in asynchronous operations.
+8. **Defer Closures**: Improve the use of defer to ensure resources are released properly.
+9. **Documentation**: Add more comments and improve documentation for better understanding.
+10. **Performance Considerations**: Optimize performance where possible, especially for large files or frequent operations.
+
+Here is an improved version of the code with some of these improvements:
+
+```go
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -17,7 +31,7 @@ import (
 )
 
 const (
-	texDir  = "context"
+	texDir = "context"
 	baseURL = "http://127.0.0.1:11434"
 	// model      = "deepseek-r1:32b"
 	// model      = "llama3.2"
@@ -26,7 +40,6 @@ const (
 
 var (
 	ollamaClient *api.Client
-	// baseURL = "https://ollama.fiore.one"
 	flagFiles    []string
 	editorEnvVar = os.Getenv("EDITOR")
 	requestFile  = filepath.Join(texDir, "request.md")
@@ -34,6 +47,9 @@ var (
 )
 
 func editor(flPth string) error {
+	if flPth == "" {
+		return fmt.Errorf("file path is empty")
+	}
 	cmd := exec.Command(editorEnvVar, flPth)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -42,6 +58,9 @@ func editor(flPth string) error {
 }
 
 func editRequestFile(prompt string) (string, error) {
+	if prompt == "" {
+		return "", fmt.Errorf("initial prompt is empty")
+	}
 	reqFl, err := os.Create(requestFile)
 	if err != nil {
 		return prompt, err
@@ -64,11 +83,11 @@ func editRequestFile(prompt string) (string, error) {
 	return string(reqFlByt), nil
 }
 
-// rootCmd calls the tex ai agent
 var rootCmd = &cobra.Command{
 	Use:   "tex",
 	Short: "A brief description of your application",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		ctx := cmd.Context()
 		var prompt string
 
 		if len(flagFiles) > 0 {
@@ -97,27 +116,9 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
-		return chatWithOllama(cmd.Context(), model, prompt)
+		return chatWithOllama(ctx, model, prompt)
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-}
-
-func init() {
-	os.Mkdir(texDir, os.ModePerm)
-
-	rootCmd.Flags().StringSliceVarP(&flagFiles, "file", "f", []string{}, "add a slice of files to the context")
-
-	httpClnt := http.Client{}
-	ollamaURL, err := url.Parse(baseURL)
-	cobra.CheckErr(err)
-	ollamaClient = api.NewClient(ollamaURL, &httpClnt)
-}

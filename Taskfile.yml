@@ -4,4 +4,9 @@ tasks:
   default:
     desc: 'build the tex binary'
     cmds:
-      - go build -o tex ./main.go
+      - "go build -o tex ./main.go"
+  install:
+    desc: 'build the tex binary, and install on the system'
+    deps: [default]
+    cmds:
+      - "sudo mv tex /usr/local/bin/"

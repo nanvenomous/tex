@@ -1,3 +1,4 @@
+```.go
 /*
 Copyright © 2025 nanvenomous mrgarelli@gmail.com
 */
@@ -121,3 +122,7 @@ func init() {
 	cobra.CheckErr(err)
 	ollamaClient = api.NewClient(ollamaURL, &httpClnt)
 }
+
+```
+
+how would you improve this code?
