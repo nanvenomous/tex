@@ -1,4 +1,5 @@
-BaseURL: "http://127.0.0.1:11434"
+BaseURL: "https://ollama.yourdomain.com"
 Headers:
+  Authorization: '$YOUR_API_KEY'
 Model: 'llama3.2'
 TemporaryDirectory: '' # defaults to system (linux `/tmp`)

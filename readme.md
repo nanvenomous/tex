@@ -1,6 +1,6 @@
 ## tex
 
-`tex` is a code context manager for getting code into AI (right now local ollama)
+`tex` is a code context manager for ollama
 
 ## Install
 ```bash
@@ -15,12 +15,12 @@ tex "how are you today?"
 
 give tex a file (or multiple) as context
 ```bash
-tex --file my/awesome/code.go "what does this awesome code do?"
+tex --file my/awesome/code.go --file my/other/code.go "what does this awesome code do?"
 ```
 
 see all the context in your editor (defined by `EDITOR` environment variable) before sending to the model
 ```bash
-tex --file my/awesome/code.go --file my/other/code.go
+tex --file my/awesome/code.go
 ```
 
 ## Config
