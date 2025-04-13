@@ -2,6 +2,9 @@
 
 `tex` is a code context manager for ollama
 
+![tex example chat](./example/tex_example_chat.gif)
+
+
 ## Install
 ```bash
 go install github.com/nanvenomous/tex@latest
